@@ -1,0 +1,67 @@
+{
+    "name": "etdatepickerlaravel/ethiopian-datepicker",
+    "description": "A comprehensive Laravel package for Ethiopian calendar datepicker with Gregorian calendar conversion",
+    "keywords": [
+        "laravel",
+        "ethiopian",
+        "calendar",
+        "datepicker",
+        "ethiopia",
+        "amharic",
+        "geez",
+        "hijri",
+        "ethiopic",
+        "conversion"
+    ],
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "EtDatepickerLaravel Team",
+            "email": "info@etdatepickerlaravel.com",
+            "homepage": "https://github.com/etdatepickerlaravel",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": "^7.4|^8.0",
+        "illuminate/support": "^8.0|^9.0|^10.0|^11.0",
+        "ext-json": "*"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.0",
+        "orchestra/testbench": "^6.0|^7.0|^8.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "EtDatepickerLaravel\\EthiopianDatepicker\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "EtDatepickerLaravel\\EthiopianDatepicker\\Tests\\": "tests/"
+        }
+    },
+    "support": {
+        "email": "support@etdatepickerlaravel.com",
+        "issues": "https://github.com/etdatepickerlaravel/ethiopian-datepicker/issues",
+        "source": "https://github.com/etdatepickerlaravel/ethiopian-datepicker",
+        "docs": "https://github.com/etdatepickerlaravel/ethiopian-datepicker#readme"
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "scripts": {
+        "test": "vendor/bin/phpunit",
+        "test-coverage": "vendor/bin/phpunit --coverage-html coverage"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "EtDatepickerLaravel\\EthiopianDatepicker\\EthiopianDatepickerServiceProvider"
+            ],
+            "aliases": {
+                "EthiopianDatepicker": "EtDatepickerLaravel\\EthiopianDatepicker\\Facades\\EthiopianDatepicker"
+            }
+        }
+    }
+}

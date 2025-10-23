@@ -1,0 +1,238 @@
+/**
+ * Ethiopian Datepicker CSS
+ * (c) 2024 WorthyERP
+ */
+
+.ethiopian-datepicker-wrapper {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+}
+
+.ethiopian-calendar-dropdown {
+    position: absolute;
+    z-index: 1000;
+    margin-top: 0.5rem;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    min-width: 320px;
+}
+
+.ethiopian-calendar-dropdown.hidden {
+    display: none;
+}
+
+.ethiopian-calendar {
+    padding: 0;
+}
+
+.ethiopian-calendar-header {
+    background: #3b82f6;
+    color: white;
+    padding: 1rem;
+    border-radius: 0.5rem 0.5rem 0 0;
+}
+
+.calendar-controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+}
+
+.calendar-controls:last-child {
+    margin-bottom: 0;
+}
+
+.calendar-controls button {
+    padding: 0.25rem 0.75rem;
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    font-size: 1.25rem;
+    line-height: 1;
+}
+
+.calendar-controls button:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.calendar-controls select {
+    padding: 0.5rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    background: white;
+    color: #1f2937;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.calendar-body {
+    padding: 1rem;
+}
+
+.calendar-grid {
+    width: 100%;
+}
+
+.weekday-header {
+    display: flex;
+    width: 100%;
+    margin-bottom: 0.5rem;
+}
+
+.day-header {
+    width: 14.28%;
+    padding: 0.5rem;
+    text-align: center;
+    font-weight: bold;
+    color: #3b82f6;
+    font-size: 0.875rem;
+}
+
+.calendar-days {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.day-cell {
+    width: 14.28%;
+    padding: 0.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-radius: 0.25rem;
+    position: relative;
+}
+
+.day-cell:not(.empty):hover {
+    background-color: #dbeafe;
+}
+
+.day-cell.empty {
+    cursor: default;
+}
+
+.day-cell.selected {
+    background-color: #3b82f6;
+    color: white;
+    font-weight: bold;
+}
+
+.day-cell.today {
+    border: 2px solid #3b82f6;
+    font-weight: bold;
+}
+
+.day-cell.weekend {
+    color: #ef4444;
+}
+
+.day-cell.selected.weekend {
+    color: white;
+}
+
+.day-cell.disabled {
+    color: #d1d5db;
+    cursor: not-allowed;
+}
+
+/* Calendar type switcher */
+.calendar-type-switcher {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.calendar-option {
+    padding: 0.75rem 1.5rem;
+    border: 2px solid #d1d5db;
+    border-radius: 0.5rem;
+    background: white;
+    color: #4b5563;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.calendar-option:hover {
+    border-color: #3b82f6;
+    color: #3b82f6;
+}
+
+.calendar-option.active {
+    background-color: #3b82f6;
+    border-color: #3b82f6;
+    color: white;
+}
+
+/* Input styling */
+input[data-ethiopian-datepicker] {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+input[data-ethiopian-datepicker]:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+input[data-ethiopian-datepicker]:read-only {
+    background-color: #f9fafb;
+    cursor: pointer;
+}
+
+/* Date display */
+.date-display {
+    background-color: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-top: 1rem;
+}
+
+.date-display h3 {
+    font-weight: 600;
+    color: #1e40af;
+    margin-bottom: 0.5rem;
+}
+
+.date-display p {
+    color: #4b5563;
+    margin-bottom: 0.25rem;
+}
+
+.date-display .date-value {
+    color: #2563eb;
+    font-weight: 500;
+}
+
+/* Responsive design */
+@media (max-width: 640px) {
+    .ethiopian-calendar-dropdown {
+        min-width: 280px;
+        left: 0;
+        right: 0;
+        margin: 0 auto;
+    }
+    
+    .day-cell {
+        padding: 0.375rem;
+        font-size: 0.875rem;
+    }
+    
+    .day-header {
+        padding: 0.375rem;
+        font-size: 0.75rem;
+    }
+}
