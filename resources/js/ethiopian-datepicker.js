@@ -246,24 +246,42 @@ class EthiopianDatepicker {
         // Ethiopian new year starts on September 11 (or 12 in Gregorian leap years)
         const newYearDay = this.isGregorianLeapYear(year) ? 12 : 11;
 
-        // Determine Ethiopian year
-        let ethYear;
-        if (month < 9 || (month === 9 && day < newYearDay)) {
-            ethYear = year - 8;
-        } else {
-            ethYear = year - 7;
-        }
-
-        // Calculate days from start of Ethiopian year
+        // Determine Ethiopian year and new year date
         let ethNewYear = new Date(year, 8, newYearDay); // September is month 8 (0-indexed)
+        let ethYear;
+        
         if (date < ethNewYear) {
+            // Date is before this year's Ethiopian new year
+            // So it belongs to the previous Ethiopian year
+            ethYear = year - 8;
+            // Calculate from previous year's new year
             const prevYear = year - 1;
             const prevNewYearDay = this.isGregorianLeapYear(prevYear) ? 12 : 11;
             ethNewYear = new Date(prevYear, 8, prevNewYearDay);
-            ethYear = year - 8;
+        } else {
+            // Date is on or after this year's Ethiopian new year
+            ethYear = year - 7;
         }
 
-        const daysSinceNewYear = Math.floor((date - ethNewYear) / (1000 * 60 * 60 * 24));
+        let daysSinceNewYear = Math.floor((date - ethNewYear) / (1000 * 60 * 60 * 24));
+        
+        // Check if we've exceeded the current Ethiopian year
+        const daysInEthYear = this.isEthiopianLeapYear(ethYear) ? 366 : 365;
+        
+        if (daysSinceNewYear >= daysInEthYear) {
+            // We've moved into the next Ethiopian year
+            // Recalculate from the next year's start date
+            ethYear++;
+            const nextGregYear = ethYear + 7;
+            const nextNewYearDay = this.isGregorianLeapYear(nextGregYear) ? 12 : 11;
+            ethNewYear = new Date(nextGregYear, 8, nextNewYearDay);
+            daysSinceNewYear = Math.floor((date - ethNewYear) / (1000 * 60 * 60 * 24));
+            
+            // Since we're before the new year, count backwards
+            const prevYearDays = this.isEthiopianLeapYear(ethYear - 1) ? 366 : 365;
+            daysSinceNewYear = prevYearDays + daysSinceNewYear;
+            ethYear--;
+        }
 
         // Calculate Ethiopian month and day
         let ethMonth, ethDay;
@@ -274,10 +292,6 @@ class EthiopianDatepicker {
             // Pagumen (13th month)
             ethMonth = 13;
             ethDay = daysSinceNewYear - 359;
-            const maxDays = this.getDaysInEthiopianMonth(ethYear, 13);
-            if (ethDay > maxDays) {
-                ethDay = maxDays;
-            }
         }
 
         return {
@@ -299,25 +313,53 @@ class EthiopianDatepicker {
             throw new Error(`Ethiopian day must be between 1 and ${maxDays} for month ${ethMonth}`);
         }
 
-        // The Gregorian year when the Ethiopian year starts (1 Meskerem)
-        // 1 Meskerem of Ethiopian year N starts in September of Gregorian year N+7
-        const gregYearAtNewYear = ethYear + 7;
-
-        // Ethiopian new year (1 Meskerem) falls on September 11 (or 12 in leap years)
-        const newYearDay = this.isGregorianLeapYear(gregYearAtNewYear) ? 12 : 11;
-
-        // Calculate days from Ethiopian new year (1 Meskerem)
-        let daysFromNewYear = (ethMonth - 1) * 30 + ethDay - 1;
-        if (ethMonth === 13) {
-            // Pagumen is after 12 months of 30 days each
-            daysFromNewYear = 360 + ethDay - 1;
+        // Use a known reference point: 1 Meskerem 2017 (Ethiopian) = September 12, 2024 (Gregorian)
+        const referenceEthYear = 2017;
+        const referenceGregDate = new Date(2024, 8, 12); // September 12, 2024
+        
+        if (ethYear >= referenceEthYear) {
+            // Calculate days from reference year to target year
+            const yearsDiff = ethYear - referenceEthYear;
+            let leapYearsInRange = 0;
+            for (let y = referenceEthYear; y < ethYear; y++) {
+                if (this.isEthiopianLeapYear(y)) {
+                    leapYearsInRange++;
+                }
+            }
+            const regularYearsInRange = yearsDiff - leapYearsInRange;
+            const daysFromReference = (regularYearsInRange * 365) + (leapYearsInRange * 366);
+            
+            // Add days within the current year
+            let daysInCurrentYear = (ethMonth - 1) * 30 + ethDay - 1;
+            if (ethMonth === 13) {
+                daysInCurrentYear = 360 + ethDay - 1;
+            }
+            
+            const totalDays = daysFromReference + daysInCurrentYear;
+            const result = new Date(referenceGregDate.getTime() + totalDays * 24 * 60 * 60 * 1000);
+            return result;
+        } else {
+            // Calculate days backwards from reference year
+            const yearsDiff = referenceEthYear - ethYear;
+            let leapYearsInRange = 0;
+            for (let y = ethYear; y < referenceEthYear; y++) {
+                if (this.isEthiopianLeapYear(y)) {
+                    leapYearsInRange++;
+                }
+            }
+            const regularYearsInRange = yearsDiff - leapYearsInRange;
+            const daysFromReference = (regularYearsInRange * 365) + (leapYearsInRange * 366);
+            
+            // Subtract days within the current year
+            let daysInCurrentYear = (ethMonth - 1) * 30 + ethDay - 1;
+            if (ethMonth === 13) {
+                daysInCurrentYear = 360 + ethDay - 1;
+            }
+            
+            const totalDays = daysFromReference - daysInCurrentYear;
+            const result = new Date(referenceGregDate.getTime() - totalDays * 24 * 60 * 60 * 1000);
+            return result;
         }
-
-        // Create the Gregorian date by starting from 1 Meskerem and adding days
-        const newYearDate = new Date(gregYearAtNewYear, 8, newYearDay); // September is month 8
-        const gregorianDate = new Date(newYearDate.getTime() + daysFromNewYear * 24 * 60 * 60 * 1000);
-
-        return gregorianDate;
     }
 }
 

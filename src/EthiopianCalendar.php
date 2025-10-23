@@ -71,38 +71,52 @@ class EthiopianCalendar
         // Ethiopian new year starts on September 11 (or 12 in Gregorian leap years)
         $newYearDay = $this->isGregorianLeapYear($year) ? 12 : 11;
 
-        // Determine Ethiopian year
-        if ($month < 9 || ($month === 9 && $day < $newYearDay)) {
-            $ethYear = $year - 8;
-        } else {
-            $ethYear = $year - 7;
-        }
-
-        // Calculate days from start of Ethiopian year
+        // Determine Ethiopian year and new year date
         $ethNewYear = new DateTime("$year-09-$newYearDay");
+        
         if ($date < $ethNewYear) {
-            // Date is before Ethiopian new year, so use previous year's new year
+            // Date is before this year's Ethiopian new year
+            // So it belongs to the previous Ethiopian year
+            $ethYear = $year - 8;
+            // Calculate from previous year's new year
             $prevYear = $year - 1;
             $prevNewYearDay = $this->isGregorianLeapYear($prevYear) ? 12 : 11;
             $ethNewYear = new DateTime("$prevYear-09-$prevNewYearDay");
-            $ethYear = $year - 8;
+        } else {
+            // Date is on or after this year's Ethiopian new year
+            $ethYear = $year - 7;
         }
 
         $diff = $ethNewYear->diff($date);
         $daysSinceNewYear = $diff->days;
+        
+        // Check if we've exceeded the current Ethiopian year
+        $daysInEthYear = $this->isLeapYear($ethYear) ? 366 : 365;
+        
+        if ($daysSinceNewYear >= $daysInEthYear) {
+            // We've moved into the next Ethiopian year
+            // Recalculate from the next year's start date
+            $ethYear++;
+            $nextGregYear = $ethYear + 7;
+            $nextNewYearDay = $this->isGregorianLeapYear($nextGregYear) ? 12 : 11;
+            $ethNewYear = new DateTime("$nextGregYear-09-$nextNewYearDay");
+            $diff = $ethNewYear->diff($date);
+            $daysSinceNewYear = $diff->days;
+            
+            // Since we're before the new year, count backwards
+            $daysInEthYear = $this->isLeapYear($ethYear - 1) ? 366 : 365;
+            $daysSinceNewYear = $daysInEthYear - $daysSinceNewYear;
+            $ethYear--;
+        }
 
         // Calculate Ethiopian month and day
         if ($daysSinceNewYear < 360) {
-            $ethMonth = floor($daysSinceNewYear / 30) + 1;
+            $ethMonth = (int)floor($daysSinceNewYear / 30) + 1;
             $ethDay = ($daysSinceNewYear % 30) + 1;
         } else {
             // Pagumen (13th month)
             $ethMonth = 13;
             $ethDay = $daysSinceNewYear - 359;
-            $maxDays = $this->getDaysInMonth($ethYear, 13);
-            if ($ethDay > $maxDays) {
-                $ethDay = $maxDays;
-            }
         }
 
         // Calculate day of week for Ethiopian calendar
@@ -139,19 +153,71 @@ class EthiopianCalendar
         
         // Ethiopian new year (1 Meskerem) falls on September 11 (or 12 in leap years)
         $newYearDay = $this->isGregorianLeapYear($gregYearAtNewYear) ? 12 : 11;
-
-        // Calculate days from Ethiopian new year (1 Meskerem)
-        $daysFromNewYear = ($ethMonth - 1) * 30 + $ethDay - 1;
+        
+        // Adjust for previous Ethiopian leap years
+        // Count how many leap years occurred from Ethiopian year 1 to year (ethYear - 1)
+        // This determines the offset in days
+        $leapYearsBefore = floor(($ethYear - 1) / 4);
+        $regularYearsBefore = ($ethYear - 1) - $leapYearsBefore;
+        $totalDaysBeforeYear = ($regularYearsBefore * 365) + ($leapYearsBefore * 366);
+        
+        // Days from epoch (Ethiopian year 1, Meskerem 1) to current date
+        $daysFromEpoch = $totalDaysBeforeYear + ($ethMonth - 1) * 30 + $ethDay - 1;
         if ($ethMonth === 13) {
-            // Pagumen is after 12 months of 30 days each
-            $daysFromNewYear = 360 + $ethDay - 1;
+            $daysFromEpoch = $totalDaysBeforeYear + 360 + $ethDay - 1;
         }
-
-        // Create the Gregorian date by starting from 1 Meskerem and adding days
-        $newYearDate = new DateTime("$gregYearAtNewYear-09-$newYearDay");
-        $newYearDate->modify("+$daysFromNewYear days");
-
-        return $newYearDate;
+        
+        // Use a known reference point that we can verify
+        // 1 Meskerem 2017 (Ethiopian) = September 12, 2024 (Gregorian)
+        // 2024 is a Gregorian leap year, so the new year is on Sept 12 (not 11)
+        $referenceEthYear = 2017;
+        $referenceGregDate = new DateTime("2024-09-12");
+        
+        if ($ethYear >= $referenceEthYear) {
+            // Calculate days from reference year to target year
+            $yearsDiff = $ethYear - $referenceEthYear;
+            $leapYearsInRange = 0;
+            for ($y = $referenceEthYear; $y < $ethYear; $y++) {
+                if ($this->isLeapYear($y)) {
+                    $leapYearsInRange++;
+                }
+            }
+            $regularYearsInRange = $yearsDiff - $leapYearsInRange;
+            $daysFromReference = ($regularYearsInRange * 365) + ($leapYearsInRange * 366);
+            
+            // Add days within the current year
+            $daysInCurrentYear = ($ethMonth - 1) * 30 + $ethDay - 1;
+            if ($ethMonth === 13) {
+                $daysInCurrentYear = 360 + $ethDay - 1;
+            }
+            
+            $totalDays = $daysFromReference + $daysInCurrentYear;
+            $result = clone $referenceGregDate;
+            $result->modify("+$totalDays days");
+            return $result;
+        } else {
+            // Calculate days backwards from reference year
+            $yearsDiff = $referenceEthYear - $ethYear;
+            $leapYearsInRange = 0;
+            for ($y = $ethYear; $y < $referenceEthYear; $y++) {
+                if ($this->isLeapYear($y)) {
+                    $leapYearsInRange++;
+                }
+            }
+            $regularYearsInRange = $yearsDiff - $leapYearsInRange;
+            $daysFromReference = ($regularYearsInRange * 365) + ($leapYearsInRange * 366);
+            
+            // Subtract days within the current year
+            $daysInCurrentYear = ($ethMonth - 1) * 30 + $ethDay - 1;
+            if ($ethMonth === 13) {
+                $daysInCurrentYear = 360 + $ethDay - 1;
+            }
+            
+            $totalDays = $daysFromReference - $daysInCurrentYear;
+            $result = clone $referenceGregDate;
+            $result->modify("-$totalDays days");
+            return $result;
+        }
     }
 
     /**
