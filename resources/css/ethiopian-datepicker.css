@@ -1,174 +1,272 @@
 /**
- * Ethiopian Datepicker CSS
- * (c) 2024 WorthyERP
+ * Ethiopian Datepicker - Minimalistic Design
  */
 
-.ethiopian-datepicker-wrapper {
+.et-datepicker-wrapper {
     position: relative;
-    display: inline-block;
     width: 100%;
 }
 
-.ethiopian-calendar-dropdown {
-    position: absolute;
-    z-index: 1000;
-    margin-top: 0.5rem;
-    background: white;
-    border: 1px solid #e5e7eb;
+.et-datepicker-input {
+    width: 100%;
+    padding: 0.625rem 0.875rem;
+    border: 1px solid #e2e8f0;
     border-radius: 0.5rem;
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-    min-width: 320px;
+    font-size: 0.9375rem;
+    transition: all 0.2s ease;
+    background: white;
+    color: #1a202c;
 }
 
-.ethiopian-calendar-dropdown.hidden {
-    display: none;
+.et-datepicker-input:focus {
+    outline: none;
+    border-color: #4299e1;
+    box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
 }
 
-.ethiopian-calendar {
-    padding: 0;
+.et-datepicker-input::placeholder {
+    color: #a0aec0;
 }
 
-.ethiopian-calendar-header {
-    background: #3b82f6;
-    color: white;
+/* Calendar Popup */
+.et-calendar-popup {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    z-index: 50;
+    background: white;
+    border-radius: 0.75rem;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
     padding: 1rem;
-    border-radius: 0.5rem 0.5rem 0 0;
+    min-width: 280px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.2s ease;
 }
 
-.calendar-controls {
+.et-calendar-popup.active {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+/* Calendar Header */
+.et-calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid #f7fafc;
+}
+
+.et-calendar-title {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: #2d3748;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    margin-bottom: 0.75rem;
+    gap: 0.5rem;
 }
 
-.calendar-controls:last-child {
-    margin-bottom: 0;
+.et-calendar-nav {
+    display: flex;
+    gap: 0.25rem;
 }
 
-.calendar-controls button {
-    padding: 0.25rem 0.75rem;
-    background: rgba(255, 255, 255, 0.2);
+.et-calendar-nav button {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     border: none;
-    color: white;
-    border-radius: 0.25rem;
-    cursor: pointer;
-    transition: background-color 0.2s;
-    font-size: 1.25rem;
-    line-height: 1;
-}
-
-.calendar-controls button:hover {
-    background: rgba(255, 255, 255, 0.3);
-}
-
-.calendar-controls select {
-    padding: 0.5rem;
-    border: 1px solid #d1d5db;
+    background: transparent;
+    color: #718096;
     border-radius: 0.375rem;
-    background: white;
-    color: #1f2937;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.et-calendar-nav button:hover {
+    background: #f7fafc;
+    color: #2d3748;
+}
+
+/* Calendar Grid */
+.et-calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+}
+
+.et-calendar-weekday {
+    text-align: center;
+    font-size: 0.75rem;
     font-weight: 600;
-    cursor: pointer;
+    color: #a0aec0;
+    padding: 0.5rem 0;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
 
-.calendar-body {
-    padding: 1rem;
-}
-
-.calendar-grid {
-    width: 100%;
-}
-
-.weekday-header {
+.et-calendar-day {
+    aspect-ratio: 1;
     display: flex;
-    width: 100%;
-    margin-bottom: 0.5rem;
-}
-
-.day-header {
-    width: 14.28%;
-    padding: 0.5rem;
-    text-align: center;
-    font-weight: bold;
-    color: #3b82f6;
+    align-items: center;
+    justify-content: center;
     font-size: 0.875rem;
-}
-
-.calendar-days {
-    display: flex;
-    flex-wrap: wrap;
-}
-
-.day-cell {
-    width: 14.28%;
-    padding: 0.5rem;
-    text-align: center;
+    color: #4a5568;
+    border-radius: 0.375rem;
     cursor: pointer;
-    transition: all 0.2s;
-    border-radius: 0.25rem;
+    transition: all 0.15s ease;
     position: relative;
 }
 
-.day-cell:not(.empty):hover {
-    background-color: #dbeafe;
+.et-calendar-day:hover:not(.disabled):not(.selected) {
+    background: #edf2f7;
+    color: #2d3748;
 }
 
-.day-cell.empty {
-    cursor: default;
+.et-calendar-day.today::after {
+    content: '';
+    position: absolute;
+    bottom: 4px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: #4299e1;
 }
 
-.day-cell.selected {
-    background-color: #3b82f6;
+.et-calendar-day.selected {
+    background: #4299e1;
     color: white;
-    font-weight: bold;
+    font-weight: 500;
 }
 
-.day-cell.today {
-    border: 2px solid #3b82f6;
-    font-weight: bold;
-}
-
-.day-cell.weekend {
-    color: #ef4444;
-}
-
-.day-cell.selected.weekend {
-    color: white;
-}
-
-.day-cell.disabled {
-    color: #d1d5db;
+.et-calendar-day.disabled {
+    color: #e2e8f0;
     cursor: not-allowed;
 }
 
-/* Calendar type switcher */
-.calendar-type-switcher {
+.et-calendar-day.other-month {
+    color: #cbd5e0;
+}
+
+/* Month/Year Selector */
+.et-month-year-selector {
     display: flex;
-    gap: 1rem;
-    margin-bottom: 1rem;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
 }
 
-.calendar-option {
-    padding: 0.75rem 1.5rem;
-    border: 2px solid #d1d5db;
-    border-radius: 0.5rem;
+.et-select {
+    flex: 1;
+    padding: 0.375rem 0.5rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.375rem;
+    font-size: 0.8125rem;
+    color: #4a5568;
     background: white;
-    color: #4b5563;
-    font-weight: 500;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.15s ease;
 }
 
-.calendar-option:hover {
-    border-color: #3b82f6;
-    color: #3b82f6;
+.et-select:focus {
+    outline: none;
+    border-color: #4299e1;
+    box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
 }
 
-.calendar-option.active {
-    background-color: #3b82f6;
-    border-color: #3b82f6;
-    color: white;
+/* Calendar Type Toggle */
+.et-calendar-toggle {
+    display: inline-flex;
+    padding: 2px;
+    background: #f7fafc;
+    border-radius: 0.5rem;
+    margin-bottom: 0.75rem;
+    width: 100%;
+}
+
+.et-toggle-btn {
+    flex: 1;
+    padding: 0.375rem 0.75rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: #718096;
+    background: transparent;
+    border: none;
+    border-radius: 0.375rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.et-toggle-btn.active {
+    background: white;
+    color: #2d3748;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+/* Animations */
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+    .et-calendar-popup {
+        left: 50%;
+        transform: translateX(-50%);
+        width: calc(100vw - 2rem);
+        max-width: 320px;
+    }
+    
+    .et-calendar-popup.active {
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+/* Dark mode support (optional) */
+@media (prefers-color-scheme: dark) {
+    .et-datepicker-input {
+        background: #2d3748;
+        border-color: #4a5568;
+        color: #e2e8f0;
+    }
+    
+    .et-calendar-popup {
+        background: #2d3748;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+    }
+    
+    .et-calendar-title {
+        color: #e2e8f0;
+    }
+    
+    .et-calendar-day {
+        color: #cbd5e0;
+    }
+    
+    .et-calendar-day:hover:not(.disabled):not(.selected) {
+        background: #374151;
+        color: #f7fafc;
+    }
+    
+    .et-select {
+        background: #374151;
+        border-color: #4a5568;
+        color: #e2e8f0;
+    }
 }
 
 /* Input styling */
