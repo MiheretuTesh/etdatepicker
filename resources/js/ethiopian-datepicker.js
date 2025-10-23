@@ -299,25 +299,22 @@ class EthiopianDatepicker {
             throw new Error(`Ethiopian day must be between 1 and ${maxDays} for month ${ethMonth}`);
         }
 
-        // Calculate the Gregorian year
-        let gregYear;
-        if (ethMonth <= 4) {
-            gregYear = ethYear + 7;
-        } else {
-            gregYear = ethYear + 8;
-        }
+        // The Gregorian year when the Ethiopian year starts (1 Meskerem)
+        // 1 Meskerem of Ethiopian year N starts in September of Gregorian year N+7
+        const gregYearAtNewYear = ethYear + 7;
 
         // Ethiopian new year (1 Meskerem) falls on September 11 (or 12 in leap years)
-        const newYearDay = this.isGregorianLeapYear(gregYear) ? 12 : 11;
+        const newYearDay = this.isGregorianLeapYear(gregYearAtNewYear) ? 12 : 11;
 
-        // Calculate days from Ethiopian new year
+        // Calculate days from Ethiopian new year (1 Meskerem)
         let daysFromNewYear = (ethMonth - 1) * 30 + ethDay - 1;
         if (ethMonth === 13) {
+            // Pagumen is after 12 months of 30 days each
             daysFromNewYear = 360 + ethDay - 1;
         }
 
-        // Create the Gregorian date
-        const newYearDate = new Date(gregYear, 8, newYearDay); // September is month 8
+        // Create the Gregorian date by starting from 1 Meskerem and adding days
+        const newYearDate = new Date(gregYearAtNewYear, 8, newYearDay); // September is month 8
         const gregorianDate = new Date(newYearDate.getTime() + daysFromNewYear * 24 * 60 * 60 * 1000);
 
         return gregorianDate;

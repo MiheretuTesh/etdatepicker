@@ -133,28 +133,22 @@ class EthiopianCalendar
             throw new \InvalidArgumentException("Ethiopian day must be between 1 and $maxDays for month $ethMonth");
         }
 
-        // Calculate the Gregorian year
-        // Ethiopian year starts in September, so:
-        // - Months 1-4 (Meskerem to Tahsas) are in Gregorian year ethYear + 7
-        // - Months 5-13 (Tir to Pagumen) are in Gregorian year ethYear + 8
-        if ($ethMonth <= 4) {
-            $gregYear = $ethYear + 7;
-        } else {
-            $gregYear = $ethYear + 8;
-        }
-
+        // The Gregorian year when the Ethiopian year starts (1 Meskerem)
+        // 1 Meskerem of Ethiopian year N starts in September of Gregorian year N+7
+        $gregYearAtNewYear = $ethYear + 7;
+        
         // Ethiopian new year (1 Meskerem) falls on September 11 (or 12 in leap years)
-        $newYearDay = $this->isGregorianLeapYear($gregYear) ? 12 : 11;
+        $newYearDay = $this->isGregorianLeapYear($gregYearAtNewYear) ? 12 : 11;
 
-        // Calculate days from Ethiopian new year
+        // Calculate days from Ethiopian new year (1 Meskerem)
         $daysFromNewYear = ($ethMonth - 1) * 30 + $ethDay - 1;
         if ($ethMonth === 13) {
-            // Adjust for Pagumen
+            // Pagumen is after 12 months of 30 days each
             $daysFromNewYear = 360 + $ethDay - 1;
         }
 
-        // Create the Gregorian date
-        $newYearDate = new DateTime("$gregYear-09-$newYearDay");
+        // Create the Gregorian date by starting from 1 Meskerem and adding days
+        $newYearDate = new DateTime("$gregYearAtNewYear-09-$newYearDay");
         $newYearDate->modify("+$daysFromNewYear days");
 
         return $newYearDate;
