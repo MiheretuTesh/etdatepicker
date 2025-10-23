@@ -1,11 +1,12 @@
 /**
- * Ethiopian Datepicker - Simple Version (Ethiopian Calendar Only)
+ * Ethiopian Datepicker - Minimalistic Version with Fixed Leap Year
  */
 
 class EthiopianDatepicker {
     constructor(element, options = {}) {
         this.element = element;
         this.options = {
+            calendarType: options.calendarType || 'ethiopian',
             onChange: options.onChange || null,
             dateFormat: options.dateFormat || 'DD/MM/YYYY',
             placeholder: options.placeholder || 'Select date',
@@ -17,9 +18,12 @@ class EthiopianDatepicker {
             'Megabit', 'Miazia', 'Ginbot', 'Sene', 'Hamle', 'Nehase', 'Pagumen'
         ];
 
-        this.weekDays = ['እሑድ', 'ሰኞ', 'ማክሰኞ', 'ረቡዕ', 'ሐሙስ', 'ዓርብ', 'ቅዳሜ'];
-        this.weekDaysShort = ['እ', 'ሰ', 'ማ', 'ረ', 'ሐ', 'ዓ', 'ቅ'];
+        this.gregorianMonths = [
+            'January', 'February', 'March', 'April', 'May', 'June',
+            'July', 'August', 'September', 'October', 'November', 'December'
+        ];
 
+        this.currentCalendarType = this.options.calendarType;
         this.selectedDate = null;
         this.currentYear = null;
         this.currentMonth = null;
@@ -30,9 +34,14 @@ class EthiopianDatepicker {
 
     init() {
         const today = new Date();
-        const todayEth = this.toEthiopian(today);
-        this.currentYear = todayEth.year;
-        this.currentMonth = todayEth.month;
+        if (this.currentCalendarType === 'ethiopian') {
+            const todayEth = this.toEthiopian(today);
+            this.currentYear = todayEth.year;
+            this.currentMonth = todayEth.month;
+        } else {
+            this.currentYear = today.getFullYear();
+            this.currentMonth = today.getMonth() + 1;
+        }
 
         this.setupCalendar();
     }
@@ -56,21 +65,28 @@ class EthiopianDatepicker {
     }
 
     renderCalendar() {
-        const monthYear = `${this.monthNames[this.currentMonth - 1]} ${this.currentYear}`;
-        
         this.calendar.innerHTML = `
+            <div class="et-calendar-toggle">
+                <button class="et-toggle-btn ${this.currentCalendarType === 'ethiopian' ? 'active' : ''}" data-type="ethiopian">
+                    Ethiopian
+                </button>
+                <button class="et-toggle-btn ${this.currentCalendarType === 'gregorian' ? 'active' : ''}" data-type="gregorian">
+                    Gregorian
+                </button>
+            </div>
+            <div class="et-month-year-selector">
+                <select class="et-select et-month-select">
+                    ${this.getMonthOptions()}
+                </select>
+                <select class="et-select et-year-select">
+                    ${this.getYearOptions()}
+                </select>
+            </div>
             <div class="et-calendar-header">
-                <button class="et-nav-btn et-prev-month" aria-label="Previous month">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M15 18l-6-6 6-6"/>
-                    </svg>
-                </button>
-                <div class="et-calendar-title">${monthYear}</div>
-                <button class="et-nav-btn et-next-month" aria-label="Next month">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M9 18l6-6-6-6"/>
-                    </svg>
-                </button>
+                <div class="et-calendar-nav">
+                    <button class="et-prev-month" aria-label="Previous month">‹</button>
+                    <button class="et-next-month" aria-label="Next month">›</button>
+                </div>
             </div>
             <div class="et-calendar-grid">
                 ${this.renderWeekDays()}
@@ -81,15 +97,44 @@ class EthiopianDatepicker {
         this.attachCalendarEvents();
     }
 
-    renderWeekDays() {
-        return this.weekDaysShort.map(day => 
-            `<div class="et-calendar-weekday">${day}</div>`
+    getMonthOptions() {
+        const months = this.currentCalendarType === 'ethiopian' ? this.monthNames : this.gregorianMonths;
+        return months.map((month, index) => 
+            `<option value="${index + 1}" ${this.currentMonth === index + 1 ? 'selected' : ''}>${month}</option>`
         ).join('');
     }
 
+    getYearOptions() {
+        const currentYear = this.currentYear;
+        const startYear = currentYear - 50;
+        const endYear = currentYear + 50;
+        let options = '';
+        
+        for (let year = startYear; year <= endYear; year++) {
+            options += `<option value="${year}" ${year === currentYear ? 'selected' : ''}>${year}</option>`;
+        }
+        return options;
+    }
+
+    renderWeekDays() {
+        const days = this.currentCalendarType === 'ethiopian' ? 
+            ['እ', 'ሰ', 'ማ', 'ረ', 'ሐ', 'ዓ', 'ቅ'] : 
+            ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+        
+        return days.map(day => `<div class="et-calendar-weekday">${day}</div>`).join('');
+    }
+
     renderDays() {
+        if (this.currentCalendarType === 'ethiopian') {
+            return this.renderEthiopianDays();
+        } else {
+            return this.renderGregorianDays();
+        }
+    }
+
+    renderEthiopianDays() {
         const daysInMonth = this.getDaysInEthiopianMonth(this.currentYear, this.currentMonth);
-        const firstDayOfWeek = this.getEthiopianFirstDayOfWeek(this.currentYear, this.currentMonth);
+        const firstDayOfWeek = this.getEthiopianDayOfWeek(this.currentYear, this.currentMonth, 1);
         const today = this.toEthiopian(new Date());
         
         let days = '';
@@ -118,10 +163,32 @@ class EthiopianDatepicker {
         return days;
     }
 
-    getEthiopianFirstDayOfWeek(year, month) {
-        // Get the day of week for the first day of the month
-        const gregorian = this.toGregorian(year, month, 1);
-        return gregorian.getDay();
+    renderGregorianDays() {
+        const year = this.currentYear;
+        const month = this.currentMonth - 1;
+        const firstDay = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const today = new Date();
+        
+        let days = '';
+        
+        for (let i = 0; i < firstDay; i++) {
+            days += '<div class="et-calendar-day disabled"></div>';
+        }
+        
+        for (let day = 1; day <= daysInMonth; day++) {
+            const currentDate = new Date(year, month, day);
+            const isToday = today.toDateString() === currentDate.toDateString();
+            const isSelected = this.selectedDate && 
+                             this.selectedDate.toDateString() === currentDate.toDateString();
+            
+            days += `<div class="et-calendar-day ${isToday ? 'today' : ''} ${isSelected ? 'selected' : ''}" 
+                         data-year="${year}" 
+                         data-month="${month + 1}" 
+                         data-day="${day}">${day}</div>`;
+        }
+        
+        return days;
     }
 
     attachEvents() {
@@ -135,16 +202,31 @@ class EthiopianDatepicker {
                 this.closeCalendar();
             }
         });
-
-        // Close on ESC key
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && this.isOpen) {
-                this.closeCalendar();
-            }
-        });
     }
 
     attachCalendarEvents() {
+        // Calendar type toggle
+        this.calendar.querySelectorAll('.et-toggle-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const type = e.target.dataset.type;
+                this.switchCalendarType(type);
+            });
+        });
+
+        // Month/Year selectors
+        const monthSelect = this.calendar.querySelector('.et-month-select');
+        const yearSelect = this.calendar.querySelector('.et-year-select');
+
+        monthSelect.addEventListener('change', (e) => {
+            this.currentMonth = parseInt(e.target.value);
+            this.renderCalendar();
+        });
+
+        yearSelect.addEventListener('change', (e) => {
+            this.currentYear = parseInt(e.target.value);
+            this.renderCalendar();
+        });
+
         // Navigation buttons
         this.calendar.querySelector('.et-prev-month').addEventListener('click', () => {
             this.navigateMonth(-1);
@@ -165,31 +247,73 @@ class EthiopianDatepicker {
         });
     }
 
+    switchCalendarType(type) {
+        if (this.currentCalendarType === type) return;
+
+        this.currentCalendarType = type;
+        const today = new Date();
+
+        if (type === 'ethiopian') {
+            const ethDate = this.toEthiopian(today);
+            this.currentYear = ethDate.year;
+            this.currentMonth = ethDate.month;
+        } else {
+            this.currentYear = today.getFullYear();
+            this.currentMonth = today.getMonth() + 1;
+        }
+
+        this.renderCalendar();
+    }
+
     navigateMonth(direction) {
         this.currentMonth += direction;
 
-        if (this.currentMonth > 13) {
-            this.currentMonth = 1;
-            this.currentYear++;
-        } else if (this.currentMonth < 1) {
-            this.currentMonth = 13;
-            this.currentYear--;
+        if (this.currentCalendarType === 'ethiopian') {
+            if (this.currentMonth > 13) {
+                this.currentMonth = 1;
+                this.currentYear++;
+            } else if (this.currentMonth < 1) {
+                this.currentMonth = 13;
+                this.currentYear--;
+            }
+        } else {
+            if (this.currentMonth > 12) {
+                this.currentMonth = 1;
+                this.currentYear++;
+            } else if (this.currentMonth < 1) {
+                this.currentMonth = 12;
+                this.currentYear--;
+            }
         }
 
         this.renderCalendar();
     }
 
     selectDate(year, month, day) {
-        this.selectedDate = { year, month, day };
-        const gregorian = this.toGregorian(year, month, day);
-        this.element.value = this.formatDate({ year, month, day });
-        
-        if (this.options.onChange) {
-            this.options.onChange({
-                ethiopian: { year, month, day },
-                gregorian: gregorian,
-                formatted: this.element.value
-            });
+        if (this.currentCalendarType === 'ethiopian') {
+            this.selectedDate = { year, month, day };
+            const gregorian = this.toGregorian(year, month, day);
+            this.element.value = this.formatDate({ year, month, day });
+            
+            if (this.options.onChange) {
+                this.options.onChange({
+                    ethiopian: { year, month, day },
+                    gregorian: gregorian,
+                    formatted: this.element.value
+                });
+            }
+        } else {
+            this.selectedDate = new Date(year, month - 1, day);
+            this.element.value = this.formatGregorianDate(this.selectedDate);
+            
+            if (this.options.onChange) {
+                const ethDate = this.toEthiopian(this.selectedDate);
+                this.options.onChange({
+                    ethiopian: ethDate,
+                    gregorian: this.selectedDate,
+                    formatted: this.element.value
+                });
+            }
         }
 
         this.closeCalendar();
@@ -200,21 +324,28 @@ class EthiopianDatepicker {
         const day = String(date.day).padStart(2, '0');
         const month = String(date.month).padStart(2, '0');
         const year = date.year;
-        const monthName = this.monthNames[date.month - 1];
 
         return format
             .replace('DD', day)
             .replace('MM', month)
-            .replace('YYYY', year)
-            .replace('MMM', monthName);
+            .replace('YYYY', year);
+    }
+
+    formatGregorianDate(date) {
+        const format = this.options.dateFormat;
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+
+        return format
+            .replace('DD', day)
+            .replace('MM', month)
+            .replace('YYYY', year);
     }
 
     toggleCalendar() {
         this.isOpen = !this.isOpen;
         this.calendar.classList.toggle('active', this.isOpen);
-        if (this.isOpen) {
-            this.renderCalendar();
-        }
     }
 
     closeCalendar() {
@@ -236,6 +367,27 @@ class EthiopianDatepicker {
             return this.isEthiopianLeapYear(year) ? 6 : 5;
         }
         return 30;
+    }
+
+    getEthiopianDayOfWeek(year, month, day) {
+        // Calculate total days from Ethiopian epoch
+        let totalDays = 0;
+        
+        // Add days for complete years
+        for (let y = 1; y < year; y++) {
+            totalDays += this.isEthiopianLeapYear(y) ? 366 : 365;
+        }
+        
+        // Add days for complete months in current year
+        for (let m = 1; m < month; m++) {
+            totalDays += this.getDaysInEthiopianMonth(year, m);
+        }
+        
+        // Add days in current month
+        totalDays += day;
+        
+        // Ethiopian calendar epoch (1/1/1) was a Monday, so we add 1
+        return (totalDays + 1) % 7;
     }
 
     toEthiopian(date) {

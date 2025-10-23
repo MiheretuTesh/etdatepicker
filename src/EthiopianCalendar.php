@@ -162,29 +162,13 @@ class EthiopianCalendar
 
     /**
      * Calculate Ethiopian day of week
-     * Ethiopian calendar follows a consistent pattern
+     * Use the Gregorian date to get the correct day of week
      */
     public function getEthiopianDayOfWeek($year, $month, $day)
     {
-        // Calculate total days from Ethiopian epoch
-        $totalDays = 0;
-        
-        // Add days for complete years
-        for ($y = 1; $y < $year; $y++) {
-            $totalDays += $this->isLeapYear($y) ? 366 : 365;
-        }
-        
-        // Add days for complete months in current year
-        for ($m = 1; $m < $month; $m++) {
-            $totalDays += $this->getDaysInMonth($year, $m);
-        }
-        
-        // Add days in current month
-        $totalDays += $day;
-        
-        // Ethiopian week starts on Sunday (0)
-        // The epoch (1/1/1) was a Monday, so we add 1
-        return ($totalDays + 1) % 7;
+        // Convert to Gregorian and get day of week from that
+        $gregorianDate = $this->toGregorian($year, $month, $day);
+        return (int)$gregorianDate->format('w');
     }
 
     /**
